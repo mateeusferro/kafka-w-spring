@@ -1,0 +1,76 @@
+services:
+#  consumer:
+#    build:
+#      context: ./kafka-w-spring-consumer
+#      dockerfile: ./Dockerfile
+#    depends_on:
+#      - kafka
+#      - mongodb
+#    environment:
+#    #      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+#    #      - SPRING_KAFKA_CONSUMER_GROUP_ID=group-id
+#    #      - SPRING_KAFKA_LISTENER_TOPICS=topic
+#    #      - SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE=admin
+#    #      - SPRING_DATA_MONGODB_HOST=mongodb
+#    #      - SPRING_DATA_MONGODB_AUTO-INDEX-CREATION=true
+#    #      - SPRING_DATA_MONGODB_PORT=27017
+#    #      - SPRING_DATA_MONGODB_DATABASE=financing
+#    #      - SPRING_DATA_MONGODB_USERNAME=root
+#    #      - SPRING_DATA_MONGODB_PASSWORD=root
+
+#  producer:
+#    build:
+#      context: ./kafka-w-spring-producer
+#      dockerfile: ./Dockerfile
+#    depends_on:
+#      - kafka
+#      - mysql
+#    environment:
+#      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+#      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/order
+#      - SPRING_DATASOURCE_USERNAME=root
+#      - SPRING_DATASOURCE_PASSWORD=root
+#      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+#      - SPRING_DATASOURCE.DRIVER-CLASS-NAME=com.mysql.cj.jdbc.Driver
+#    ports:
+#      - 8080:8080
+
+  zookeeper:
+    image: zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    ports:
+      - 2181:2181
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - ALLOW_PLAINTEXT_LISTENER="yes"
+
+  mongodb:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    ports:
+      - 27017:27017
+
+  mysql:
+    image: mysql:8.0-debian
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=order
+    volumes:
+      - ./kafka-w-spring-producer/db:/docker-entrypoint-initdb.d/
+    ports:
+      - 3306:3306
